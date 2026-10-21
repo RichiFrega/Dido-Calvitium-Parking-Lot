@@ -1,0 +1,25 @@
+# Java / Maven
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Configurazione locale della Control Unit (ognuno ha la sua porta COM)
+control-unit/config.json
+
+# Credenziali Wi-Fi dell'ESP32
+**/secrets.h
+
+# Arduino / PlatformIO
+.pio/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini

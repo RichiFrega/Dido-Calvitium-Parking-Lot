@@ -1,0 +1,8 @@
+{
+  "http":    { "port": 8080, "dashboardDir": "../dashboard" },
+  "serial":  { "port": "", "baudRate": 115200 },
+  "gate":    { "pingPeriodMs": 2000, "linkTimeoutMs": 6000 },
+  "mqtt":    { "host": "localhost", "port": 1883, "clientId": "control-unit", "topicRoot": "parking" },
+  "parking": { "capacity": 5 },
+  "air":     { "c1Ppm": 30, "c2Ppm": 100, "tMaxC": 40, "dtSeconds": 10, "f1PeriodMs": 5000, "f2PeriodMs": 1000 }
+}

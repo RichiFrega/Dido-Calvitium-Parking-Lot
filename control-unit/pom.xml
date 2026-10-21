@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>it.unibo.esiot</groupId>
+  <artifactId>control-unit</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <name>Smart Parking - Control Unit</name>
+
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <vertx.version>4.5.32</vertx.version>
+    <jssc.version>2.9.6</jssc.version>
+    <slf4j.version>2.0.17</slf4j.version>
+
+    <!-- classe avviata dal jar e da "mvn exec:java" (sovrascrivibile con -Dexec.mainClass=...) -->
+    <main.class>it.unibo.esiot.parking.Main</main.class>
+    <exec.mainClass>${main.class}</exec.mainClass>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- allinea le versioni di tutti i moduli Vert.x -->
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-stack-depchain</artifactId>
+        <version>${vertx.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+    </dependency>
+    <!-- HTTP: router, API REST, file statici della dashboard -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web</artifactId>
+    </dependency>
+    <!-- client MQTT verso l'ESP32 -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-mqtt</artifactId>
+    </dependency>
+    <!-- seriale verso l'Arduino (librerie native incluse per Windows, Linux e macOS) -->
+    <dependency>
+      <groupId>io.github.java-native</groupId>
+      <artifactId>jssc</artifactId>
+      <version>${jssc.version}</version>
+    </dependency>
+    <!-- JSSC registra tramite SLF4J: senza un'implementazione stampa solo un avviso -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+      </plugin>
+
+      <!-- mvn compile exec:java -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.5.0</version>
+      </plugin>
+
+      <!-- mvn package -> target/control-unit.jar, un unico jar eseguibile con tutte le dipendenze -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <outputFile>${project.build.directory}/control-unit.jar</outputFile>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>${main.class}</mainClass>
+                </transformer>
+                <!-- Vert.x registra i propri servizi in META-INF/services: vanno uniti, non sovrascritti -->
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

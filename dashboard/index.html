@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Parking · Operatore</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; color: #1b252e; }
+    .big { font-size: 3rem; font-weight: 700; margin: 0; }
+    pre { background: #f2f4f6; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .err { color: #b23a2e; }
+  </style>
+</head>
+<body>
+  <!-- Segnaposto per verificare che la Control Unit serva la dashboard e risponda alle API.
+       La dashboard vera (grafici, storico, comandi) va costruita qui: doc/interfacce.md, §5. -->
+  <h1>Smart Parking · vista operatore</h1>
+  <p class="big"><span id="free">–</span> posti liberi</p>
+  <p id="msg"></p>
+  <pre id="raw">in attesa di /api/status…</pre>
+  <script>
+    async function refresh() {
+      try {
+        const res = await fetch("/api/status");
+        const s = await res.json();
+        document.getElementById("free").textContent = s.free;
+        document.getElementById("raw").textContent = JSON.stringify(s, null, 2);
+        document.getElementById("msg").textContent = "";
+      } catch (e) {
+        const m = document.getElementById("msg");
+        m.textContent = "Control Unit non raggiungibile";
+        m.className = "err";
+      }
+    }
+    refresh();
+    setInterval(refresh, 2000);
+  </script>
+</body>
+</html>
