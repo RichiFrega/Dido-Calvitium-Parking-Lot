@@ -6,10 +6,10 @@
 
 class WifiManager {
     public:
-    WifiManager();
+        WifiManager();
 
-    boolean isConnected();
-    void connect(const char* ssid, const char* password);
+        boolean isConnected();
+        void connect(const char* ssid, const char* password);
 };
 
 #endif
