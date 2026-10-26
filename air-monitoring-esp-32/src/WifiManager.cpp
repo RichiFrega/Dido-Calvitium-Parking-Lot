@@ -18,6 +18,9 @@ void WifiManager::connect(const char* ssid, const char* password) {
     Serial.println(String("Connected to Wi-Fi network:") + ssid);
 }
 
-boolean WifiManager::isConnected() {
-    return WiFi.status() == WL_CONNECTED;
+void WifiManager::loop(const char* ssid, const char* password){
+    if (WiFi.status() != WL_CONNECTED){
+        Serial.print("Wi-Fi Disconnected... Trying Reconnection.");
+        connect(ssid, password);
+    }
 }

@@ -8,8 +8,8 @@ class WifiManager {
     public:
         WifiManager();
 
-        boolean isConnected();
         void connect(const char* ssid, const char* password);
+        void loop(const char* ssid, const char* password);
 };
 
 #endif
