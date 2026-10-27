@@ -3,10 +3,6 @@
 #include "devices/GasSensorMQ2_Wokwi.h"
 #include "kernel/Logger.h"
 
-const float V_REF = 3.3;
-const int ADC_RES = 4095;
-const float RL = 10.0;
-
 GasSensorMQ2_Wokwi::GasSensorMQ2_Wokwi(int pin) : pin(pin) {}
 
 float GasSensorMQ2_Wokwi::getPPM() {
