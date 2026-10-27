@@ -1,5 +1,5 @@
-#include "MQTTManager.h"
-#include "Logger.h"
+#include "mqtt/MQTTManager.h"
+#include "kernel/Logger.h"
 
 MQTTManager::MQTTManager(const char* broker, int port, const char* defaultTopic)
     : client(espClient), broker(broker), port(port), defaultTopic(defaultTopic) {}
@@ -32,5 +32,6 @@ bool MQTTManager::publish(const char* subTopic, const char* message) {
         Logger.log(String("Publishing message in [") + fullTopic + String("]: ") + message);
         return client.publish(fullTopic.c_str(), message); 
     }
+    Logger.log("Broker not Connected.");
     return false;
 }
