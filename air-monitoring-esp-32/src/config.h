@@ -2,6 +2,7 @@
 #define __CONFIG__
 
 #define GAS_PIN 34
+#define TEMP_PIN 35
 
 //Password da spostare in un file escluso tramite .gitignore
 #define WIFI_SSID "Wokwi-GUEST"

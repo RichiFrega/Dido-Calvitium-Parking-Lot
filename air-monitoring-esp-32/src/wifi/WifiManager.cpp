@@ -1,5 +1,5 @@
-#include "WifiManager.h"
-#include "Logger.h"
+#include "wifi/WifiManager.h"
+#include "kernel/Logger.h"
 
 WifiManager::WifiManager(const char* ssid, const char* password)
     : ssid(ssid), password(password) {}
