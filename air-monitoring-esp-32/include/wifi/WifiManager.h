@@ -12,8 +12,8 @@ class WifiManager {
     public:
         WifiManager(const char* ssid, const char* password);
 
-        void connect();
-        void loop();
+        void begin();
+        bool isConnected();
 };
 
 #endif

@@ -19,6 +19,8 @@ class MQTTManager {
 
         void setup();
 
+        bool tryConnect();
+        bool isConnected();
         void loop();
 
         bool publish(const char* subTopic, const char* message);
