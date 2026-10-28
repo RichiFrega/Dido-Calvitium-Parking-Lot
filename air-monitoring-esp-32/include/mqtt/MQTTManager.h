@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <WiFiClient.h>
 #include <PubSubClient.h>
+#include <functional>
 
 class MQTTManager {
     private:
@@ -13,6 +14,7 @@ class MQTTManager {
         const char* broker;
         int port;
         const char* defaultTopic;
+        std::function<void(const String&, const String&)> handler;
 
     public:
         MQTTManager(const char* broker, int port, const char* defaultTopic);
@@ -24,6 +26,7 @@ class MQTTManager {
         void loop();
 
         bool publish(const char* subTopic, const char* message);
+        void onMessage(std::function<void(const String&, const String&)> h) { handler = h; };
 };
 
 #endif

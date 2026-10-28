@@ -14,5 +14,7 @@
 #define MQTT_BROKER "broker.mqtt-dashboard.com"
 #define MQTT_PORT 1883
 #define MQTT_TOPIC "Dido-Calvitium-Parking-Lot"
+#define MQTT_TOPIC_DATA "data"
+#define MQTT_TOPIC_CONFIGURATION "config"
 
 #endif
