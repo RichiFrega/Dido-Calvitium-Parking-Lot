@@ -40,7 +40,7 @@ GasSensorMQ2_Wokwi::GasSensorMQ2_Wokwi(int pin) : pin(pin) {}
 
 float GasSensorMQ2_Wokwi::getPPM() {
     int adc_value = analogRead(this->pin);
-
+    
     if (adc_value <= 0) return 0.1; 
     if (adc_value >= 4095) return 100000.0;
 
