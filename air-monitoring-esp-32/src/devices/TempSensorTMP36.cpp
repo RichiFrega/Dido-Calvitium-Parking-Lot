@@ -30,7 +30,7 @@ float TempSensorTMP36::getTemperature() {
 
         Logger.log(i+1 + String("° Measured Temperature:") + tempInCelsius + String("°C"));
     }
-    float sum;
+    float sum = 0;
 
     for (int i = 0; i < 5; i++) {
         sum = sum + values[i];
