@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <atomic>
 #include "config.h"
 #include "kernel/Logger.h"
 #include "wifi/WifiManager.h"
@@ -24,7 +25,8 @@ NetworkFSM networkFSM(wifiManager, mqttManager, GREEN_LED, RED_LED);
 struct Sample { float temp; float co; };
 QueueHandle_t samplingQueue;
 
-volatile uint32_t samplingPeriodMs = 5000;
+//Atomic, because the value is written by Task1 on CPU0 but is read by Task2 on CPU1.
+std::atomic<uint32_t> samplingPeriodMs{5000};
 
 void setup() {
   Serial.begin(115200);
@@ -36,7 +38,20 @@ void setup() {
 
   samplingQueue = xQueueCreate(10, sizeof(Sample));
   xTaskCreatePinnedToCore(Task1comm, "Task1", 8192, NULL, 1, &Task1, 0);
-  xTaskCreatePinnedToCore(Task2sampling, "Task2", 4096, NULL, 2, &Task2, 1);  
+  xTaskCreatePinnedToCore(Task2sampling, "Task2", 4096, NULL, 2, &Task2, 1);
+
+  mqttManager.onMessage([](const String& topic, const String& payload) {
+    if (topic.endsWith("/config")) {
+      long ms = payload.toInt();
+      if (ms >= 500 && ms <= 60000) {
+        samplingPeriodMs = (uint32_t)ms;
+        Logger.log(String("Sampling period set to:") + ms + "ms, running on core " + xPortGetCoreID());
+      }
+      else {
+        Logger.log("Configuration ignored: invalid value.");
+      }
+    }
+  });
 }
 
 void loop() {
@@ -57,7 +72,7 @@ void Task1comm(void*) {
       doc["co"] = s.co;
       char buf[64];
       serializeJson(doc, buf);
-      mqttManager.publish("data", buf);
+      mqttManager.publish(MQTT_TOPIC_DATA, buf);
     }
     // Pause me for 20 milliseconds, starting from this exact moment.
     vTaskDelay(pdMS_TO_TICKS(20));

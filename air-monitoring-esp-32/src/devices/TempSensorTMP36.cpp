@@ -17,12 +17,14 @@
  * - 0.01 = stepVoltPerDegree
  */
 
+#define numberOfSample 5
+
 TempSensorTMP36::TempSensorTMP36(int pin) : pin(pin) {}
 
 float TempSensorTMP36::getTemperature() {
-    float values[5];
+    float values[numberOfSample];
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < numberOfSample; i++) {
         int adc_value = analogRead(this->pin);
 
         float tempInCelsius = ((adc_value * 0.000805) - 0.5) / 0.01;
@@ -32,10 +34,10 @@ float TempSensorTMP36::getTemperature() {
     }
     float sum = 0;
 
-    for (int i = 0; i < 5; i++) {
-        sum = sum + values[i];
+    for (int i = 0; i < numberOfSample; i++) {
+        sum += values[i];
     }
     
-    Logger.log(String("Average Temp:") + sum/5 + String("°C"));
-    return sum/5;
+    Logger.log(String("Average Temp:") + sum/numberOfSample + String("°C"));
+    return sum/numberOfSample;
 }
