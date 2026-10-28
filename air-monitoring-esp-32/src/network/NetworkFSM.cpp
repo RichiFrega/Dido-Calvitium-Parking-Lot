@@ -27,6 +27,7 @@ void NetworkFSM::step() {
             if (wifi.isConnected()) {
                 if (mqtt.isConnected() || mqtt.tryConnect()) {
                     enter(CONNECTED);
+                    Logger.log("WiFi and MQTT connected.");
                 }
                 else {
                     enter(NETWORK_ERROR);
@@ -40,6 +41,7 @@ void NetworkFSM::step() {
         case CONNECTED:
             if (!wifi.isConnected() || !mqtt.isConnected()) {
                 enter(NETWORK_ERROR);
+                Logger.log(":::: NETWORK ERROR ::::");
             }
             else {
                 mqtt.loop();
