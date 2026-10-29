@@ -1,6 +1,7 @@
 {
   "folders": [
     { "name": "Air Monitoring (ESP32)", "path": "air-monitoring-esp-32" },
+    { "name": "Gate Controller (Arduino)", "path": "gate-controller" },
     { "name": "Control Unit",           "path": "control-unit" },
 	{ "name": "Dashboard",				"path": "dashboard" },
     { "name": "Doc",                    "path": "doc" }
