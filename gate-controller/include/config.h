@@ -29,9 +29,9 @@ constexpr uint8_t       SONAR_CONFIRM_READS = 2;        // letture per dichiarar
 constexpr uint8_t       SONAR_RELEASE_READS = 3;        // letture per dichiarare "libero"
 
 /* SBARRA */
-constexpr uint8_t       BARRIER_ANGLE_CLOSED = 85;
-constexpr uint8_t       BARRIER_ANGLE_OPEN   = 180;
-constexpr unsigned long BARRIER_TRAVEL_MS    = 500UL;  // 350 ms misurato + margine
+constexpr uint8_t       BARRIER_ANGLE_CLOSED = 35;
+constexpr uint8_t       BARRIER_ANGLE_OPEN   = 155;
+constexpr unsigned long BARRIER_TRAVEL_MS    = 650UL;  // ms misurato + margine
 
 /* PULSANTE */
 constexpr unsigned long BUTTON_DEBOUNCE_MS = 50UL;
