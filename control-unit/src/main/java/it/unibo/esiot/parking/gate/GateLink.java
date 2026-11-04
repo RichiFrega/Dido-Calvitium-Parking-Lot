@@ -1,17 +1,16 @@
 package it.unibo.esiot.parking.gate;
 
 /**
- * Protocollo con il Gate Controller (doc/interfacce.md, §3), sopra SerialChannel.
+ * Protocol with the Gate Controller (doc/interfacce.md, §3), on top of SerialChannel.
  *
- * Deve:
- * - all'avvio aspettare HELLO, poi inviare lo stato completo (FREE e ALARM);
- * - mandare PING ogni 2 s e accorgersi quando non arrivano più PONG;
- * - gestire SLEEP e WAKE;
- * - interpretare i messaggi dell'Arduino (EV, GATE, BTN, HELLO con i contatori
- *   della modalità degradata) e ignorare le righe di log che iniziano con '#';
- * - permettere alle altre parti della Control Unit di inviare FREE, ALARM e
- *   CMD:OPEN;
- * - riprovare periodicamente se la porta non si apre o il cavo viene scollegato.
+ * It must:
+ * - at startup wait for HELLO, then send the full state (FREE, ALARM and PARK);
+ * - send PING every 2 s and detect when PONG stops arriving;
+ * - handle SLEEP and WAKE;
+ * - interpret the Arduino messages (EV, GATE, BTN, HELLO with the degraded-mode
+ *   counters) and ignore the log lines starting with '#';
+ * - let the other parts of the Control Unit send FREE, ALARM, PARK and CMD:OPEN;
+ * - retry periodically if the port does not open or the cable is unplugged.
  */
 public class GateLink {
 }

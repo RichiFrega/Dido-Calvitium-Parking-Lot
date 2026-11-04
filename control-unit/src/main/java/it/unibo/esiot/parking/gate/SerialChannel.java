@@ -1,18 +1,18 @@
 package it.unibo.esiot.parking.gate;
 
 /**
- * Canale seriale a righe di testo verso l'Arduino, basato su JSSC
- * (come SerialCommChannel del lab 2.2).
+ * Line-based serial channel towards the Arduino, built on JSSC
+ * (like SerialCommChannel in lab 2.2).
  *
- * Deve:
- * - aprire la porta con i parametri del §3.1 (115200 baud, 8N1);
- * - raccogliere i byte ricevuti e dividerli in righe terminate da '\n';
- * - consegnare ogni riga ricevuta a chi usa il canale;
- * - inviare una riga aggiungendo '\n';
- * - chiudere la porta.
+ * It must:
+ * - open the port with the parameters of §3.1 (115200 baud, 8N1);
+ * - collect the received bytes and split them into lines terminated by '\n';
+ * - deliver each received line to whoever uses the channel;
+ * - send a line, appending '\n';
+ * - close the port.
  *
- * Attenzione: JSSC notifica i dati ricevuti da un suo thread, non dall'event
- * loop di Vert.x.
+ * Warning: JSSC notifies the received data from its own thread, not from the
+ * Vert.x event loop.
  */
 public class SerialChannel {
 }

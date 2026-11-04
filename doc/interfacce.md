@@ -1,12 +1,13 @@
 # Smart Parking: documento delle interfacce
 
-**Versione 1.0 (bozza)** · 21 ottobre 2026 · da approvare tutti e tre entro domenica 25 ottobre
+**Versione 1.1** · 29 ottobre 2026
 
 Questo documento è il contratto tra i quattro sottosistemi. Descrive ogni messaggio che passa da un sottosistema all'altro: canale, direzione, formato, significato e reazione attesa. Si cambia solo dopo averne parlato insieme, aggiornando versione e changelog.
 
 | Versione | Data | Modifica |
 |---|---|---|
 | 1.0 | 21/10/2026 | Prima bozza da discutere |
+| 1.1 | 29/10/2026 | Aggiunto lo stato CLOSED del parcheggio, per la chiusura temporanea (§1.1, §3, §5, §6.5) |
 
 ---
 
@@ -31,14 +32,29 @@ Ogni dato ha un solo proprietario. Gli altri sottosistemi ne ricevono una copia 
 
 | Dato | Proprietario | Note |
 |---|---|---|
-| Posti occupati e liberi, stato AVAILABLE / FULL | Control Unit | il Gate conta in proprio solo in modalità degradata (§3.6) |
+| Posti occupati e liberi, stato AVAILABLE / FULL / CLOSED | Control Unit | il Gate conta in proprio solo in modalità degradata (§3.6) |
 | Livello dell'aria NORMAL / WARNING / ALARM | Control Unit | |
 | Livello di ventilazione e frequenza di campionamento | Control Unit | l'ESP32 li applica e basta |
 | Capienza e soglie | Control Unit | file di configurazione; la capienza si cambia anche dalla dashboard |
 | Stato fisico della sbarra e transiti | Gate Controller | la CU lo conosce tramite i messaggi `GATE` ed `EV` |
 | Misure di temperatura e CO | Air Monitoring | |
 
-Convenzione: i nomi degli stati sono gli stessi, in maiuscolo, su tutti i canali (`AVAILABLE`, `FULL`, `NORMAL`, `WARNING`, `ALARM`).
+Convenzione: i nomi degli stati sono gli stessi, in maiuscolo, su tutti i canali (`AVAILABLE`, `FULL`, `CLOSED`, `NORMAL`, `WARNING`, `ALARM`).
+
+### 1.1 Stati del parcheggio
+
+| Stato | Quando | Ingressi | Uscite | LCD del Gate |
+|---|---|---|---|---|
+| `AVAILABLE` | aperto e con almeno un posto libero | consentiti | consentite | posti liberi |
+| `FULL` | aperto e senza posti liberi | negati | consentite | "PARCHEGGIO PIENO" |
+| `CLOSED` | chiuso da un operatore, ad esempio per manutenzione | negati | consentite | "PARCHEGGIO CHIUSO" |
+
+- `CLOSED` prevale sugli altri due: un parcheggio chiuso è `CLOSED` qualunque sia il numero di posti liberi.
+- Si può chiudere anche con auto dentro: le uscite restano consentite e il conteggio continua a funzionare.
+- La chiusura la applica il Gate, che con `PARK:CLOSED` non apre più la sbarra agli ingressi. Un `EV:ENTER` che arriva comunque a parcheggio chiuso (un'auto che era già sotto la sbarra al momento della chiusura) è un'auto entrata davvero, quindi la CU lo conta.
+- La chiusura è indipendente dalla capienza, che resta sempre tra 1 e 99: per chiudere il parcheggio si usa `CLOSED`, non la capienza 0.
+- Sull'LCD l'allarme ha la precedenza su tutto: con ALARM attivo si vede "EVACUARE", poi "PARCHEGGIO CHIUSO", poi "PARCHEGGIO PIENO".
+- All'avvio il parcheggio è aperto (se si adotta la persistenza del §8.4, riparte nello stato in cui era).
 
 ---
 
@@ -82,7 +98,7 @@ Le frequenze si trasmettono sempre come **periodo in millisecondi** (`period_ms`
 
 | Messaggio | Quando | Reazione della CU |
 |---|---|---|
-| `HELLO:<e>:<u>` | all'avvio e ogni 1 s finché non arriva il primo messaggio dalla CU; `<e>` e `<u>` sono le entrate e le uscite contate in modalità degradata (`HELLO:0:0` dopo un avvio normale) | applica `occupati += e − u` (limitato tra 0 e la capienza), poi invia lo stato completo: `FREE:<n>` e `ALARM:ON` / `ALARM:OFF` |
+| `HELLO:<e>:<u>` | all'avvio e ogni 1 s finché non arriva il primo messaggio dalla CU; `<e>` e `<u>` sono le entrate e le uscite contate in modalità degradata (`HELLO:0:0` dopo un avvio normale) | applica `occupati += e − u` (limitato tra 0 e la capienza), poi invia lo stato completo: `FREE:<n>`, `ALARM:ON` / `ALARM:OFF` e `PARK:OPEN` / `PARK:CLOSED` |
 | `EV:ENTER` | un veicolo ha completato l'ingresso (sequenza A → B) | `occupati += 1` (mai oltre la capienza, altrimenti warning nel log), evento nello storico, risponde `FREE:<n>` |
 | `EV:EXIT` | un veicolo ha completato l'uscita (sequenza B → A) | `occupati −= 1` (mai sotto 0), evento nello storico, risponde `FREE:<n>` |
 | `EV:ABORT` | un veicolo si è presentato ma non è transitato entro `T1` | solo evento nello storico, il conteggio non cambia |
@@ -98,10 +114,13 @@ Le frequenze si trasmettono sempre come **periodo in millisecondi** (`period_ms`
 |---|---|---|
 | `FREE:<n>` | in risposta a `HELLO` e `WAKE`, dopo ogni `EV:ENTER` / `EV:EXIT`, quando cambia la capienza | aggiorna l'LCD; con `n = 0` passa a FULL e nega l'ingresso; esce dalla modalità degradata |
 | `ALARM:ON` / `ALARM:OFF` | quando il livello dell'aria entra o esce da ALARM, e in risposta a `HELLO` e `WAKE` | ON: buzzer, LCD "EVACUARE", ingresso negato, uscita consentita. OFF: torna al funzionamento normale |
+| `PARK:OPEN` / `PARK:CLOSED` | quando un operatore apre o chiude il parcheggio dalla dashboard, e in risposta a `HELLO` e `WAKE` | CLOSED: LCD "PARCHEGGIO CHIUSO", ingresso negato anche con posti liberi, uscita consentita. OPEN: torna a decidere l'ingresso in base a `FREE` |
 | `CMD:OPEN` | comando di apertura dalla dashboard | apre la sbarra passando dalla stessa FSM del pulsante manuale |
 | `PING` | ogni 2 s mentre il Gate è sveglio | risponde `PONG` |
 
-Il Gate non conosce la capienza: gli basta sapere quanti posti sono liberi. Lo stato FULL coincide con `FREE:0`.
+Il Gate non conosce la capienza: gli basta sapere quanti posti sono liberi. Lo stato FULL coincide con `FREE:0`; lo stato CLOSED arriva con `PARK:CLOSED` ed è indipendente da `FREE`.
+
+Da non confondere: `GATE:OPEN` / `GATE:CLOSED` (Arduino → CU) riguardano la sbarra fisica, `PARK:OPEN` / `PARK:CLOSED` (CU → Arduino) l'apertura del parcheggio.
 
 I comandi trasportano **valori assoluti**, mai variazioni ("liberi = 2", non "un posto in meno"). Così un messaggio ripetuto non fa danni.
 
@@ -110,7 +129,7 @@ I comandi trasportano **valori assoluti**, mai variazioni ("liberi = 2", non "un
 1. La CU apre la porta seriale. **L'Arduino UNO si resetta** quando la porta viene aperta, per via del segnale DTR.
 2. La CU non invia nulla finché non riceve `HELLO`.
 3. Dopo il `setup()` l'Arduino invia `HELLO:0:0` ogni secondo.
-4. La CU risponde con `FREE:<n>` e `ALARM:OFF` (oppure `ALARM:ON`) e comincia a inviare `PING`.
+4. La CU risponde con `FREE:<n>`, `ALARM:OFF` (oppure `ALARM:ON`) e `PARK:OPEN` (oppure `PARK:CLOSED`) e comincia a inviare `PING`.
 
 ### 3.5 Sleep mode
 
@@ -122,7 +141,7 @@ I comandi trasportano **valori assoluti**, mai variazioni ("liberi = 2", non "un
 
 - Il Gate entra in modalità degradata se, da sveglio, non riceve messaggi dalla CU per 6 s (tre `PING` persi).
 - In modalità degradata:
-  - continua a gestire la sbarra, contando i posti a partire dall'ultimo `FREE` ricevuto;
+  - continua a gestire la sbarra, contando i posti a partire dall'ultimo `FREE` ricevuto e mantenendo l'ultimo stato `PARK` ricevuto;
   - mostra "OFFLINE" sull'LCD;
   - tiene due contatori, entrate `e` e uscite `u`, dall'inizio della disconnessione;
   - invia `HELLO:<e>:<u>` ogni secondo.
@@ -134,6 +153,7 @@ I comandi trasportano **valori assoluti**, mai variazioni ("liberi = 2", non "un
 A→C  HELLO:0:0
 C→A  FREE:5
 C→A  ALARM:OFF
+C→A  PARK:OPEN
 C→A  PING
 A→C  PONG
 A→C  # sensore A: oggetto a 12 cm
@@ -213,6 +233,8 @@ A→C  GATE:CLOSED
 | `GET /api/history?n=100` | | storico e statistiche (sotto) | 400 se `n` non è tra 1 e 1000 |
 | `GET /api/public` | | `{"free": 2, "capacity": 5, "parking": "AVAILABLE", "alarm": false}` | |
 | `POST /api/alarm/reset` | nessuno | `{"level": "NORMAL"}` | 409 se il livello non è ALARM |
+| `POST /api/parking/close` | nessuno | `{"parking": "CLOSED"}` | |
+| `POST /api/parking/open` | nessuno | `{"parking": "AVAILABLE"}` oppure `{"parking": "FULL"}` | |
 | `POST /api/gate/open` | nessuno | `{"sent": true}` | 503 se il Gate è `DISCONNECTED` |
 | `POST /api/ventilation` | `{"mode": "MANUAL", "level": 70}` oppure `{"mode": "AUTO"}` | `{"mode": "MANUAL", "level": 70}` | 400 se `level` non è tra 0 e 100 |
 | `PUT /api/config/capacity` | `{"capacity": 6}` | `{"capacity": 6, "free": 3}` | 400 se minore dei posti occupati, minore di 1 o maggiore di 99 |
@@ -239,7 +261,7 @@ A→C  GATE:CLOSED
 ```
 
 Valori possibili:
-- `parking`: `AVAILABLE` oppure `FULL`.
+- `parking`: `AVAILABLE`, `FULL` oppure `CLOSED` (§1.1). Lo stesso vale per `GET /api/public`.
 - `air.level`: `NORMAL`, `WARNING` oppure `ALARM`.
 - `ventilation.mode`: `AUTO` oppure `MANUAL`.
 - `gate.link`: `CONNECTED`, `SLEEPING` oppure `DISCONNECTED`.
@@ -266,14 +288,16 @@ Ordinato dal più vecchio al più recente, così la dashboard lo passa direttame
 }
 ```
 
-- `events[].type`: `ENTER`, `EXIT`, `ABORT`, `MANUAL_OPEN`, `REMOTE_OPEN`, `ALARM_ON`, `ALARM_OFF`, `ALARM_RESET`.
+- `events[].type`: `ENTER`, `EXIT`, `ABORT`, `MANUAL_OPEN`, `REMOTE_OPEN`, `ALARM_ON`, `ALARM_OFF`, `ALARM_RESET`, `PARKING_CLOSED`, `PARKING_OPENED`.
 - `stats` copre il periodo dalla mezzanotte di oggi (`since`).
 
 ### 5.3 Regole di comportamento
 
 - **In ALARM** la ventilazione è sempre al 100%, anche se la modalità è MANUAL. La scelta MANUAL torna a valere dopo il reset.
 - **Dopo il reset dell'allarme** il livello torna a NORMAL. Se i valori sono ancora sopra le soglie, la FSM li rivaluta al campione successivo e, dopo `DT`, torna in ALARM.
-- **La vista pubblica** usa solo `GET /api/public`, che non espone i dati riservati agli operatori.
+- **La vista pubblica** usa solo `GET /api/public`, che non espone i dati riservati agli operatori. Con il parcheggio chiuso mostra "CHIUSO".
+- **Apertura e chiusura** si possono ripetere senza errori: chiudere un parcheggio già chiuso non cambia nulla e risponde comunque 200. A ogni cambio effettivo la CU invia `PARK:OPEN` / `PARK:CLOSED` al Gate e registra l'evento nello storico.
+- **La capienza** si può cambiare anche con il parcheggio chiuso.
 
 ---
 
@@ -314,6 +338,14 @@ Ordinato dal più vecchio al più recente, così la dashboard lo passa direttame
 3. Entrano due auto: il Gate le conta in proprio (`e = 2`).
 4. Il cavo viene ricollegato. Il Gate invia `HELLO:2:0`, la CU aggiunge 2 posti occupati e risponde `FREE:<n>`.
 
+### 6.5 Chiusura per manutenzione
+
+1. Ci sono 3 auto dentro. L'operatore preme "Chiudi parcheggio" nella dashboard (`POST /api/parking/close`).
+2. La CU passa a CLOSED, registra l'evento `PARKING_CLOSED` e invia `PARK:CLOSED` al Gate.
+3. Il Gate mostra "PARCHEGGIO CHIUSO". Un'auto si presenta al sensore A: la sbarra resta chiusa, anche se ci sono 2 posti liberi.
+4. Un'auto esce (B → A): la sbarra si apre, `EV:EXIT`, la CU risponde `FREE:3`. Il parcheggio resta CLOSED.
+5. Finita la manutenzione, l'operatore preme "Apri parcheggio" (`POST /api/parking/open`). La CU torna AVAILABLE, registra `PARKING_OPENED` e invia `PARK:OPEN`.
+
 ---
 
 ## 7. Come testare ogni lato da solo
@@ -351,5 +383,5 @@ curl -X POST -H 'Content-Type: application/json' \
    - Da provare con gli esempi `step8_deepsleep` e `step9_lightsleep_with_timer` dei lab.
 2. **Dove si calibra il CO.** Proposta: sull'ESP32, che conosce il sensore e la sua curva; la CU riceve già i ppm. In alternativa l'ESP32 manda il valore grezzo dell'ADC e la CU lo converte.
 3. **Livello dell'aria con l'ESP32 offline.** Proposta: la CU mantiene l'ultimo livello noto e la dashboard mostra un avviso. Va deciso se, oltre una certa durata, conviene una scelta prudente, come ventilazione al massimo.
-4. **Persistenza del conteggio.** Proposta: la CU salva capienza e posti occupati in un file JSON a ogni cambio, così un suo riavvio non azzera il parcheggio.
+4. **Persistenza del conteggio.** Proposta: la CU salva capienza, posti occupati e stato di chiusura in un file JSON a ogni cambio, così un suo riavvio non azzera il parcheggio e non lo riapre da solo.
 5. **Broker locale o pubblico per la demo finale.** Proposta: locale, con il broker pubblico solo come piano di riserva e con la radice unica dei topic (§4.1).

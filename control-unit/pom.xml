@@ -17,14 +17,14 @@
     <jssc.version>2.9.6</jssc.version>
     <slf4j.version>2.0.17</slf4j.version>
 
-    <!-- classe avviata dal jar e da "mvn exec:java" (sovrascrivibile con -Dexec.mainClass=...) -->
+    <!-- class started by the jar and by "mvn exec:java" (can be overridden with -Dexec.mainClass=...) -->
     <main.class>it.unibo.esiot.parking.Main</main.class>
     <exec.mainClass>${main.class}</exec.mainClass>
   </properties>
 
   <dependencyManagement>
     <dependencies>
-      <!-- allinea le versioni di tutti i moduli Vert.x -->
+      <!-- aligns the versions of all the Vert.x modules -->
       <dependency>
         <groupId>io.vertx</groupId>
         <artifactId>vertx-stack-depchain</artifactId>
@@ -40,23 +40,23 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-core</artifactId>
     </dependency>
-    <!-- HTTP: router, API REST, file statici della dashboard -->
+    <!-- HTTP: router, REST API, static files of the dashboard -->
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web</artifactId>
     </dependency>
-    <!-- client MQTT verso l'ESP32 -->
+    <!-- MQTT client towards the ESP32 -->
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-mqtt</artifactId>
     </dependency>
-    <!-- seriale verso l'Arduino (librerie native incluse per Windows, Linux e macOS) -->
+    <!-- serial port towards the Arduino (native libraries included for Windows, Linux and macOS) -->
     <dependency>
       <groupId>io.github.java-native</groupId>
       <artifactId>jssc</artifactId>
       <version>${jssc.version}</version>
     </dependency>
-    <!-- JSSC registra tramite SLF4J: senza un'implementazione stampa solo un avviso -->
+    <!-- JSSC logs through SLF4J: without an implementation it only prints a warning -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
@@ -79,7 +79,7 @@
         <version>3.5.0</version>
       </plugin>
 
-      <!-- mvn package -> target/control-unit.jar, un unico jar eseguibile con tutte le dipendenze -->
+      <!-- mvn package -> target/control-unit.jar, a single executable jar with all the dependencies -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -96,7 +96,7 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>${main.class}</mainClass>
                 </transformer>
-                <!-- Vert.x registra i propri servizi in META-INF/services: vanno uniti, non sovrascritti -->
+                <!-- Vert.x registers its services in META-INF/services: they must be merged, not overwritten -->
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
               </transformers>
               <filters>
