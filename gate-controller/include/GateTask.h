@@ -19,6 +19,7 @@ private:
     enum State
     {
         CLOSED,
+        OPENING,
         OPEN,
         WAIT_CLEAR,
         CLOSING

@@ -45,6 +45,9 @@ constexpr uint8_t LCD_I2C_ADDRESS = 0x27;        // da verificare una volta comp
 constexpr uint8_t LCD_COLUMNS     = 16;
 constexpr uint8_t LCD_ROWS        = 2;
 
+/* eventi */
+constexpr uint8_t EVENT_QUEUE_SIZE = 8;         // events waiting for the CommTaks
+
 /* TEST (senza cu) */
 constexpr uint8_t TEST_INITIAL_FREE_SPOTS = 5;   // solo finché la cu non gestisce i posti
 
