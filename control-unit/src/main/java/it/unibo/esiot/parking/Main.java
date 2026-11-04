@@ -1,14 +1,14 @@
 package it.unibo.esiot.parking;
 
 /**
- * Punto di avvio della Control Unit.
+ * Entry point of the Control Unit.
  *
- * Deve:
- * - leggere la configurazione da config.json (o, se manca, da config.example.json);
- * - creare Vert.x e avviare ControlUnitVerticle passandogli la configurazione.
+ * It must:
+ * - read the configuration from config.json (or, if missing, from config.example.json);
+ * - create Vert.x and deploy ControlUnitVerticle, passing it the configuration.
  *
- * Il pom.xml la usa come classe principale per "mvn exec:java" e per il jar,
- * quindi deve contenere il metodo main.
+ * The pom.xml uses it as the main class for "mvn exec:java" and for the jar,
+ * so it must contain the main method.
  */
 public final class Main {
 }

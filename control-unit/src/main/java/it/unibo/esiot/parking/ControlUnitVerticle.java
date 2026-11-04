@@ -1,16 +1,15 @@
 package it.unibo.esiot.parking;
 
 /**
- * Verticle principale della Control Unit.
+ * Main verticle of the Control Unit.
  *
- * Deve creare lo stato (ParkingState) e i tre collegamenti (GateLink, AirLink,
- * HttpApi), avviarli e collegarli tra loro. Ad esempio, quando il livello
- * dell'aria entra in ALARM deve avvisare il Gate e portare la ventilazione al
- * massimo (doc/interfacce.md, §6.3).
+ * It must create the model (ParkingState and AirMonitor) and the three links
+ * (GateLink, AirLink, HttpApi), start them and connect them to each other. For
+ * example, when the air level enters ALARM it must notify the Gate and set the
+ * ventilation to the maximum (doc/interfacce.md, §6.3).
  *
- * Conviene che tutti i collegamenti girino sullo stesso event loop: così lo
- * stato non viene mai modificato da due thread nello stesso momento (pattern
- * Reactor, modulo 2.4).
+ * All the links should run on the same event loop, so that the state is never
+ * modified by two threads at the same time (Reactor pattern, module 2.4).
  */
 public class ControlUnitVerticle {
 }
