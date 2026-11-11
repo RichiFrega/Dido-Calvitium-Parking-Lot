@@ -21,6 +21,11 @@ void GateTask::setState(State s)
     case CLOSED:
         Serial.println(F("# Gate -> CLOSED"));
         break;
+    case OPENING:
+        Serial.println(direction == ENTERING
+                           ? F("# Gate --> OPENING (entering)")
+                           : F("# Gate --> OPENING (exiting)"));
+        break;
     case OPEN:
         Serial.println(direction == ENTERING
                            ? F("# Gate -> OPEN (entering)")
@@ -55,7 +60,7 @@ void GateTask::openFor(Direction d)
     barrier->setPosition(BARRIER_ANGLE_OPEN);
     direction = d;
     passed = false;
-    setState(OPEN);
+    setState(OPENING);
 }
 
 void GateTask::tick()
@@ -76,6 +81,17 @@ void GateTask::tick()
         else if (!a && b)
         {
             openFor(EXITING);
+        }
+
+        break;
+    }
+
+    case OPENING:
+    {
+        if (elapsedInState() >= BARRIER_TRAVEL_MS)
+        {
+            context->registerGateOpen();
+            setState(OPEN);
         }
 
         break;
@@ -125,6 +141,7 @@ void GateTask::tick()
     {
         if (elapsedInState() >= BARRIER_TRAVEL_MS) // attesa per la chiusura
         {
+            context->registerGateClosed();
             setState(CLOSED);
         }
         else if (a || b) // ostacolo durante la chiusura

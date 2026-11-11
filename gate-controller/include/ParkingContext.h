@@ -1,44 +1,62 @@
 #ifndef __PARKING_CONTEXT__
 #define __PARKING_CONTEXT__
 
+#include <Arduino.h>
+#include "config.h"
+
 enum GateEvent
 {
     EV_NONE,
     EV_ENTER,
     EV_EXIT,
-    EV_ABORT
-}; // eventi prodotti dal gatetask
+    EV_ABORT,
+    EV_GATE_OPEN,
+    EV_GATE_CLOSED
+}; // events produced by the gatetask, to be sent to the cu
 
-// stato condiviso tra i task (shared variables, modulo 2.3)
+// state shared among tasks (shared variables, module 2.3)
 class ParkingContext
 {
 public:
     ParkingContext(int initialFreeSpots);
 
-    // posti liveri
+    // free spots
     int getFreeSpots();
     void setFreeSpots(int n);
 
-    // allarme
+    // air alarm
     bool isAlarmOn();
     void setAlarm(bool on);
 
-    // regola di ingresso: posti disponibili e allarme spento
+    //parking lot closed by an operator
+    bool isParkingClosed();
+    void setParkingClosed(bool closed);
+
+    // entry role: free spots, no alarm, parking lot open
     bool canEnter();
 
-    // eventi della sbarra
+    // events from the gatetask
     void registerEnter();
     void registerExit();
     void registerAbort();
+    void registerGateOpen();
+    void registerGateClosed();
 
-    // consumo dell'evento
+    // event comsumption (commtaks), oldest first
     bool hasEvent();
     GateEvent takeEvent();
 
 private:
+    void pushEvent(GateEvent e);
+
     int freeSpots;
     bool alarmOn;
-    GateEvent pendingEvent;
+    bool parkingClosed;
+
+    // circular queue of events
+    GateEvent events[EVENT_QUEUE_SIZE];
+    uint8_t head;   // index of the oldest event
+    uint8_t count;  // number of events in the queue
 };
 
 #endif
