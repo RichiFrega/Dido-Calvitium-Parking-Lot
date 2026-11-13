@@ -7,6 +7,7 @@ ParkingContext::ParkingContext(int initialFreeSpots)
     parkingClosed = false; // at startup the parking lot is open
     head = 0;
     count = 0;
+    openRequested = false;
 }
 
 int ParkingContext::getFreeSpots()
@@ -96,7 +97,7 @@ GateEvent ParkingContext::takeEvent()
 
 void ParkingContext::pushEvent(GateEvent e)
 {
-    if (count == EVENT_QUEUE_SIZE)      // full: drop the oldest event
+    if (count == EVENT_QUEUE_SIZE) // full: drop the oldest event
     {
         head = (head + 1) % EVENT_QUEUE_SIZE;
         count--;
@@ -104,4 +105,16 @@ void ParkingContext::pushEvent(GateEvent e)
     uint8_t tail = (head + count) % EVENT_QUEUE_SIZE;
     events[tail] = e;
     count++;
+}
+
+void ParkingContext::requestOpen()
+{
+    openRequested = true;
+}
+
+bool ParkingContext::takeOpenRequest()
+{
+    bool r = openRequested;
+    openRequested = false;
+    return r;
 }

@@ -27,7 +27,8 @@ private:
     enum Direction
     {
         ENTERING,
-        EXITING
+        EXITING,
+        MANUAL
     } direction;
 
     ProximitySensor *sensorA;
