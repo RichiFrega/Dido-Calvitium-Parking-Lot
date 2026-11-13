@@ -22,9 +22,12 @@ void GateTask::setState(State s)
         Serial.println(F("# Gate -> CLOSED"));
         break;
     case OPENING:
-        Serial.println(direction == ENTERING
-                           ? F("# Gate --> OPENING (entering)")
-                           : F("# Gate --> OPENING (exiting)"));
+        if (direction == ENTERING)
+            Serial.println(F("# Gate -> OPENING (entering)"));
+        else if (direction == EXITING)
+            Serial.println(F("# Gate -> OPENING (exinting)"));
+        else
+            Serial.println(F("# Gate -> OPENING (manual)"));
         break;
     case OPEN:
         Serial.println(direction == ENTERING
@@ -70,6 +73,8 @@ void GateTask::tick()
     bool a = sensorA->isDetected();
     bool b = sensorB->isDetected();
 
+    bool openRequest = context->takeOpenRequest(); // leggo ad ogni tick
+
     switch (state)
     {
     case CLOSED:
@@ -81,6 +86,10 @@ void GateTask::tick()
         else if (!a && b)
         {
             openFor(EXITING);
+        }
+        else if (openRequest)
+        {
+            openFor(MANUAL); // non controllo canEnter()
         }
 
         break;
@@ -99,6 +108,14 @@ void GateTask::tick()
 
     case OPEN:
     {
+        if (direction == MANUAL)
+        {
+            if (elapsedInState() >= T1_MS)
+            {
+                setState(WAIT_CLEAR); // transito non contato
+            }
+        }
+
         bool opposite = (direction == ENTERING) ? b : a;
 
         if (opposite)

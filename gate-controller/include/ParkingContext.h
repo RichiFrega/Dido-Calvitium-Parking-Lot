@@ -46,6 +46,10 @@ public:
     bool hasEvent();
     GateEvent takeEvent();
 
+    // manual opening request: CMD:OPEN (commtask) or button
+    void requestOpen();
+    bool takeOpenRequest();
+
 private:
     void pushEvent(GateEvent e);
 
@@ -57,6 +61,8 @@ private:
     GateEvent events[EVENT_QUEUE_SIZE];
     uint8_t head;   // index of the oldest event
     uint8_t count;  // number of events in the queue
+
+    bool openRequested;
 };
 
 #endif

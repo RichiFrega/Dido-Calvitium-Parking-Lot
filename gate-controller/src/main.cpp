@@ -58,6 +58,7 @@ void printHelp() {
   Serial.println(F("#       f = parking full, r = reset free spots,"));
   Serial.println(F("#       x = alarm on/off, p = parking closed/open,"));
   Serial.println(F("#       s = status, h = help"));
+  Serial.println(F("#       o = manual open"));
 }
 
 void handleCommand(char c) {
@@ -70,6 +71,7 @@ void handleCommand(char c) {
     case 'p': context->setParkingClosed(!context->isParkingClosed()); printStatus(); break;
     case 's': printStatus(); break;
     case 'h': printHelp(); break;
+    case 'o': context->requestOpen(); break;
     default: break;
   }
 }
