@@ -21,6 +21,14 @@ void GateTask::setState(State s)
     case CLOSED:
         Serial.println(F("# Gate -> CLOSED"));
         break;
+    case OPENING:
+        if (direction == ENTERING)
+            Serial.println(F("# Gate -> OPENING (entering)"));
+        else if (direction == EXITING)
+            Serial.println(F("# Gate -> OPENING (exinting)"));
+        else
+            Serial.println(F("# Gate -> OPENING (manual)"));
+        break;
     case OPEN:
         Serial.println(direction == ENTERING
                            ? F("# Gate -> OPEN (entering)")
@@ -55,7 +63,7 @@ void GateTask::openFor(Direction d)
     barrier->setPosition(BARRIER_ANGLE_OPEN);
     direction = d;
     passed = false;
-    setState(OPEN);
+    setState(OPENING);
 }
 
 void GateTask::tick()
@@ -64,6 +72,8 @@ void GateTask::tick()
     sensorB->sample();
     bool a = sensorA->isDetected();
     bool b = sensorB->isDetected();
+
+    bool openRequest = context->takeOpenRequest(); // leggo ad ogni tick
 
     switch (state)
     {
@@ -77,12 +87,35 @@ void GateTask::tick()
         {
             openFor(EXITING);
         }
+        else if (openRequest)
+        {
+            openFor(MANUAL); // non controllo canEnter()
+        }
+
+        break;
+    }
+
+    case OPENING:
+    {
+        if (elapsedInState() >= BARRIER_TRAVEL_MS)
+        {
+            context->registerGateOpen();
+            setState(OPEN);
+        }
 
         break;
     }
 
     case OPEN:
     {
+        if (direction == MANUAL)
+        {
+            if (elapsedInState() >= T1_MS)
+            {
+                setState(WAIT_CLEAR); // transito non contato
+            }
+        }
+
         bool opposite = (direction == ENTERING) ? b : a;
 
         if (opposite)
@@ -125,6 +158,7 @@ void GateTask::tick()
     {
         if (elapsedInState() >= BARRIER_TRAVEL_MS) // attesa per la chiusura
         {
+            context->registerGateClosed();
             setState(CLOSED);
         }
         else if (a || b) // ostacolo durante la chiusura

@@ -19,6 +19,7 @@ private:
     enum State
     {
         CLOSED,
+        OPENING,
         OPEN,
         WAIT_CLEAR,
         CLOSING
@@ -26,7 +27,8 @@ private:
     enum Direction
     {
         ENTERING,
-        EXITING
+        EXITING,
+        MANUAL
     } direction;
 
     ProximitySensor *sensorA;
