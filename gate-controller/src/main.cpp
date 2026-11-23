@@ -6,6 +6,8 @@
 #include "ParkingContext.h"
 #include "GateTask.h"
 
+// NON AGGIORNATO!!!
+
 /*
 TEST ONLY: proximity sensor driven from the keyboard.
 It implements the same interface as Sonar, so the GateTask
