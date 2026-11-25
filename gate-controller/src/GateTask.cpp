@@ -1,6 +1,7 @@
 #include "GateTask.h"
 #include <Arduino.h>
 #include "config.h"
+#include <avr/sleep.h>
 
 GateTask::GateTask(ProximitySensor *sensorA, ProximitySensor *sensorB,
                    ServoMotor *barrier, ParkingContext *context)
@@ -10,6 +11,8 @@ GateTask::GateTask(ProximitySensor *sensorA, ProximitySensor *sensorB,
     this->barrier = barrier;
     this->context = context;
 }
+
+static void wakeUp() {}
 
 void GateTask::setState(State s)
 {
@@ -40,6 +43,9 @@ void GateTask::setState(State s)
     case CLOSING:
         Serial.println(F("# Gate -> CLOSING"));
         break;
+    case GOING_TO_SLEEP:
+        Serial.println(F("# Gate -> GOING_TO_SLEEP"));
+        break;
     }
 }
 
@@ -66,6 +72,28 @@ void GateTask::openFor(Direction d)
     setState(OPENING);
 }
 
+void GateTask::sleepNow()
+{
+    Serial.println(F("# going to sleep"));
+    Serial.flush();
+    barrier->off();
+    EIFR = bit(INTF1); // clear any old INT1 edge, or we wake up immediately
+    attachInterrupt(digitalPinToInterrupt(PIN_PIR), wakeUp, RISING);
+
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    do
+    {
+        sleep_enable();
+        sleep_mode();    // the CPU stops here
+        sleep_disable(); // ...and continues here
+    } while (digitalRead(PIN_PIR) == LOW && digitalRead(PIN_BUTTON) == LOW); // spurious wake-up: sleep again
+
+    detachInterrupt(digitalPinToInterrupt(PIN_PIR));
+    barrier->on();
+    barrier->setPosition(BARRIER_ANGLE_CLOSED);
+    Serial.println(F("# woke up"));
+}
+
 void GateTask::tick()
 {
     sensorA->sample();
@@ -90,6 +118,11 @@ void GateTask::tick()
         else if (openRequest)
         {
             openFor(MANUAL); // non controllo canEnter()
+        }
+        else if (elapsedInState() >= T_SLEEP_MS && !context->isAlarmOn() && !context->isOffline())
+        {
+            context->registerSleep();
+            setState(GOING_TO_SLEEP);
         }
 
         break;
@@ -167,6 +200,21 @@ void GateTask::tick()
             setState(WAIT_CLEAR);
         }
 
+        break;
+    }
+
+    case GOING_TO_SLEEP:
+    {
+        if (a || b || openRequest || context->isAlarmOn())
+        {
+            setState(CLOSED); // something happened: do not sleep
+        }
+        else if (!context->hasEvent())
+        { // SLEEP has been sent by the CommTask
+            sleepNow();
+            context->registerWake();
+            setState(CLOSED);
+        }
         break;
     }
     }

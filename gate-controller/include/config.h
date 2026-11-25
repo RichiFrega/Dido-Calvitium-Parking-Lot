@@ -37,18 +37,21 @@ constexpr unsigned long BARRIER_TRAVEL_MS    = 650UL;  // ms misurato + margine
 constexpr unsigned long BUTTON_DEBOUNCE_MS = 50UL;
 
 /* TEMPI */
-constexpr unsigned long T1_MS        = 10000UL;  // timeout del transito
-constexpr unsigned long GATE_TASK_MS = 50UL;     // periodo del gatetask
-constexpr unsigned long PARKING_TASK_MS = 200UL;   // display/LED: human perception
-constexpr unsigned long ALARM_TASK_MS   = 500UL;   // buzzer on/off rhythm
+constexpr unsigned long T1_MS        = 10000UL;     // timeout del transito
+constexpr unsigned long GATE_TASK_MS = 50UL;        // periodo del gatetask
+constexpr unsigned long PARKING_TASK_MS = 200UL;    // display/LED: human perception
+constexpr unsigned long ALARM_TASK_MS   = 500UL;    // buzzer on/off rhythm
 
 /* DISPLAY */
 constexpr uint8_t LCD_I2C_ADDRESS = 0x27;        // da verificare una volta comprato l'I2C
 constexpr uint8_t LCD_COLUMNS     = 16;
 constexpr uint8_t LCD_ROWS        = 2;
 
-/* eventi */
+/* EVENTI */
 constexpr uint8_t EVENT_QUEUE_SIZE = 8;         // events waiting for the CommTaks
+
+/* SLEEP MODE */
+constexpr unsigned long T_SLEEP_MS = 10000UL;   // da cambiare in 60000UL, l'attuale è solo per i test!
 
 /* TEST (senza cu) */
 constexpr uint8_t TEST_INITIAL_FREE_SPOTS = 5;   // solo finché la cu non gestisce i posti

@@ -163,6 +163,17 @@ int ParkingContext::getOfflineExits()
     return offlineExits;
 }
 
-void ParkingContext::registerButtonOpen() {
-  pushEvent(EV_BUTTON_OPEN);
+void ParkingContext::registerButtonOpen()
+{
+    pushEvent(EV_BUTTON_OPEN);
+}
+
+void ParkingContext::registerSleep()
+{
+    pushEvent(EV_SLEEP);
+}
+
+void ParkingContext::registerWake()
+{
+    pushEvent(EV_WAKE);
 }
