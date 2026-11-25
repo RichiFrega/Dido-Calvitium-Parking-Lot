@@ -22,7 +22,8 @@ private:
         OPENING,
         OPEN,
         WAIT_CLEAR,
-        CLOSING
+        CLOSING,
+        GOING_TO_SLEEP
     } state;
     enum Direction
     {
@@ -42,6 +43,7 @@ private:
     void setState(State s);
     unsigned long elapsedInState();
     void openFor(Direction d);
+    void sleepNow();
 };
 
 #endif

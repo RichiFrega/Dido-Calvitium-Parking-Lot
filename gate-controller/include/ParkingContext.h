@@ -12,7 +12,9 @@ enum GateEvent
     EV_ABORT,
     EV_GATE_OPEN,
     EV_GATE_CLOSED,
-    EV_BUTTON_OPEN
+    EV_BUTTON_OPEN,
+    EV_SLEEP,
+    EV_WAKE
 }; // events produced by the gatetask, to be sent to the cu
 
 // state shared among tasks (shared variables, module 2.3)
@@ -59,7 +61,9 @@ public:
     int getOfflineEntries();
     int getOfflineExits();
 
-
+    // sleep mode
+    void registerSleep();
+    void registerWake();
 
 private:
     void pushEvent(GateEvent e);
