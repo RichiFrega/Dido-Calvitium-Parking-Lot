@@ -13,6 +13,7 @@ void ParkingTask::init(int period)
     Task::init(period);
     shownFreeSpots = context->getFreeSpots();
     shownAlarm = context->isAlarmOn();
+    shownOffline = context->isOffline();
     setState(computeState());
 }
 
@@ -49,15 +50,20 @@ void ParkingTask::setState(State s)
     showMessage();
 }
 
-// message priority: EVACUATE > CLOSED > FULL > free spots
+// message priority: EVACUATE > OFFLINE > CLOSED > FULL > free spots
 void ParkingTask::showMessage()
 {
     shownFreeSpots = context->getFreeSpots();
     shownAlarm = context->isAlarmOn();
+    shownOffline = context->isOffline();
 
     if (shownAlarm)
     {
         Serial.println(F("# LCD: EVACUARE"));
+    }
+    else if (shownOffline)
+    {
+        Serial.println(F("# LCD: OFFLINE"));
     }
     else if (state == CLOSED)
     {
@@ -81,7 +87,9 @@ void ParkingTask::tick()
     {
         setState(next); // transition
     }
-    else if (context->getFreeSpots() != shownFreeSpots || context->isAlarmOn() != shownAlarm)
+    else if (context->getFreeSpots() != shownFreeSpots
+            || context->isAlarmOn() != shownAlarm
+            || context->isOffline() != shownOffline)
     {
         showMessage(); // self-loop: refresh only
     }

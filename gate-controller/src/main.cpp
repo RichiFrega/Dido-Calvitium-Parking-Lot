@@ -3,28 +3,29 @@
 #include "Scheduler.h"
 #include "Sonar.h"
 #include "servo_motor_impl.h"
+#include "Led.h"
+#include "BuzzerImpl.h"
+#include "ButtonEvent.h"
 #include "ParkingContext.h"
 #include "GateTask.h"
+#include "ParkingTask.h"
+#include "AlarmTask.h"
 
-// NON AGGIORNATO!!!
+// SOLO PER TEST!!!
 
-/*
-TEST ONLY: proximity sensor driven from the keyboard.
-It implements the same interface as Sonar, so the GateTask
-cannot tell the difference.
-*/
 class FakeProximitySensor : public ProximitySensor {
 public:
   FakeProximitySensor() { detected = false; }
-  void sample() { }                         // nothing to measure
+  void sample() { }
   bool isDetected() { return detected; }
   void toggle() { detected = !detected; }
 private:
   bool detected;
 };
 
-// true = sensor A is fake too (key 'a'), false = A is the real sonar
+/* true = sensor driven by the keyboard, false = real sonar */
 constexpr bool FAKE_A = false;
+constexpr bool FAKE_B = true;
 
 Scheduler sched;
 ParkingContext* context;
@@ -38,67 +39,87 @@ const __FlashStringHelper* eventName(GateEvent e) {
     case EV_ABORT:       return F("EV:ABORT");
     case EV_GATE_OPEN:   return F("GATE:OPEN");
     case EV_GATE_CLOSED: return F("GATE:CLOSED");
+    case EV_BUTTON_OPEN: return F("BTN:OPEN");
     default:             return F("NONE");
   }
 }
 
 void printStatus() {
-  Serial.print(F("# free: "));
-  Serial.print(context->getFreeSpots());
-  Serial.print(F("  alarm: "));
-  Serial.print(context->isAlarmOn());
-  Serial.print(F("  closed: "));
-  Serial.print(context->isParkingClosed());
-  Serial.print(F("  canEnter: "));
-  Serial.print(context->canEnter());
-  Serial.print(F("  B: "));
-  Serial.println(fakeB->isDetected());
+  Serial.print(F("# free: "));      Serial.print(context->getFreeSpots());
+  Serial.print(F("  alarm: "));     Serial.print(context->isAlarmOn());
+  Serial.print(F("  closed: "));    Serial.print(context->isParkingClosed());
+  Serial.print(F("  offline: "));   Serial.print(context->isOffline());
+  Serial.print(F(" (e: "));         Serial.print(context->getOfflineEntries());
+  Serial.print(F(" u: "));          Serial.print(context->getOfflineExits());
+  Serial.print(F(")  canEnter: ")); Serial.print(context->canEnter());
+  if (fakeA != nullptr) { Serial.print(F("  A: ")); Serial.print(fakeA->isDetected()); }
+  if (fakeB != nullptr) { Serial.print(F("  B: ")); Serial.print(fakeB->isDetected()); }
+  Serial.println();
 }
 
 void printHelp() {
-  Serial.println(F("# keys: b = toggle B, a = toggle A (if fake),"));
-  Serial.println(F("#       f = parking full, r = reset free spots,"));
-  Serial.println(F("#       x = alarm on/off, p = parking closed/open,"));
+  Serial.println(F("# keys: a/b = toggle fake sensor A/B"));
+  Serial.println(F("#       f = full, r = reset free spots"));
+  Serial.println(F("#       x = alarm on/off, p = parking closed/open"));
+  Serial.println(F("#       n = offline on/off, o = manual open (CMD:OPEN)"));
   Serial.println(F("#       s = status, h = help"));
-  Serial.println(F("#       o = manual open"));
 }
 
 void handleCommand(char c) {
   switch (c) {
-    case 'b': fakeB->toggle(); printStatus(); break;
     case 'a': if (fakeA != nullptr) { fakeA->toggle(); } printStatus(); break;
+    case 'b': if (fakeB != nullptr) { fakeB->toggle(); } printStatus(); break;
     case 'f': context->setFreeSpots(0); printStatus(); break;
     case 'r': context->setFreeSpots(TEST_INITIAL_FREE_SPOTS); printStatus(); break;
     case 'x': context->setAlarm(!context->isAlarmOn()); printStatus(); break;
     case 'p': context->setParkingClosed(!context->isParkingClosed()); printStatus(); break;
+    case 'n': context->setOffline(!context->isOffline()); printStatus(); break;
+    case 'o': context->requestOpen(); break;
     case 's': printStatus(); break;
     case 'h': printHelp(); break;
-    case 'o': context->requestOpen(); break;
     default: break;
   }
+}
+
+ProximitySensor* makeSensor(bool fake, FakeProximitySensor** fakeOut, int trig, int echo) {
+  if (fake) {
+    *fakeOut = new FakeProximitySensor();
+    return *fakeOut;
+  }
+  return new Sonar(trig, echo);
 }
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
 
-  ProximitySensor* sensorA;
-  if (FAKE_A) {
-    fakeA = new FakeProximitySensor();
-    sensorA = fakeA;
-  } else {
-    sensorA = new Sonar(PIN_SONAR_A_TRIG, PIN_SONAR_A_ECHO);
-  }
-  fakeB = new FakeProximitySensor();
-
+  /* devices */
+  ProximitySensor* sensorA = makeSensor(FAKE_A, &fakeA, PIN_SONAR_A_TRIG, PIN_SONAR_A_ECHO);
+  ProximitySensor* sensorB = makeSensor(FAKE_B, &fakeB, PIN_SONAR_B_TRIG, PIN_SONAR_B_ECHO);
   ServoMotor* barrier = new ServoMotorImpl(PIN_SERVO);
+  Light* greenLed = new Led(PIN_LED_GREEN);
+  Light* redLed = new Led(PIN_LED_RED);
+  Buzzer* buzzer = new BuzzerImpl(PIN_BUZZER);
+  buttonEventInit(PIN_BUTTON);
+
+  /* shared state */
   context = new ParkingContext(TEST_INITIAL_FREE_SPOTS);
 
+  /* tasks: base period = GCD of the periods (50 ms) */
   sched.init(GATE_TASK_MS);
-  Task* gateTask = new GateTask(sensorA, fakeB, barrier, context);
+
+  Task* gateTask = new GateTask(sensorA, sensorB, barrier, context);
   gateTask->init(GATE_TASK_MS);
   sched.addTask(gateTask);
 
-  Serial.println(F("# GateTask test started"));
+  Task* parkingTask = new ParkingTask(greenLed, redLed, context);
+  parkingTask->init(PARKING_TASK_MS);
+  sched.addTask(parkingTask);
+
+  Task* alarmTask = new AlarmTask(buzzer, context);
+  alarmTask->init(ALARM_TASK_MS);
+  sched.addTask(alarmTask);
+
+  Serial.println(F("# Gate Controller test started"));
   printHelp();
   printStatus();
 }
@@ -106,12 +127,19 @@ void setup() {
 void loop() {
   sched.schedule();
 
-  // keyboard commands
+  /* manual-open button (interrupt flag) */
+  if (buttonEventTake()) {
+    Serial.println(F("# button pressed"));
+    context->registerButtonOpen();
+    context->requestOpen();
+  }
+
+  /* keyboard commands */
   while (Serial.available()) {
     handleCommand(Serial.read());
   }
 
-  // temporary: the events will be consumed by the commtask
+  /* temporary: the CommTask will send these events to the CU */
   while (context->hasEvent()) {
     GateEvent e = context->takeEvent();
     Serial.print(F("# EVENT "));

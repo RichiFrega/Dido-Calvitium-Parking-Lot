@@ -8,6 +8,9 @@ ParkingContext::ParkingContext(int initialFreeSpots)
     head = 0;
     count = 0;
     openRequested = false;
+    offline = false;
+    offlineEntries = 0;
+    offlineExits = 0;
 }
 
 int ParkingContext::getFreeSpots()
@@ -54,13 +57,24 @@ void ParkingContext::registerEnter()
     pushEvent(EV_ENTER);
 
     if (freeSpots > 0)
+    {
         freeSpots--;
+    }
+    if (offline)
+    {
+        offlineEntries++;
+    }
 }
 
 void ParkingContext::registerExit()
 {
     pushEvent(EV_EXIT);
     freeSpots++;
+
+    if (offline)
+    {
+        offlineExits++;
+    }
 }
 
 void ParkingContext::registerAbort()
@@ -117,4 +131,38 @@ bool ParkingContext::takeOpenRequest()
     bool r = openRequested;
     openRequested = false;
     return r;
+}
+
+bool ParkingContext::isOffline()
+{
+    return offline;
+}
+
+void ParkingContext::setOffline(bool value)
+{
+    if (value && !offline) // entering degraded mode, counters start from 0
+    {
+        offlineEntries = 0;
+        offlineExits = 0;
+    }
+    if (!value) // back online
+    {
+        offlineEntries = 0;
+        offlineExits = 0;
+    }
+    offline = value;
+}
+
+int ParkingContext::getOfflineEntries()
+{
+    return offlineEntries;
+}
+
+int ParkingContext::getOfflineExits()
+{
+    return offlineExits;
+}
+
+void ParkingContext::registerButtonOpen() {
+  pushEvent(EV_BUTTON_OPEN);
 }

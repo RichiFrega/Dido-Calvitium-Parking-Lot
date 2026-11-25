@@ -39,6 +39,8 @@ constexpr unsigned long BUTTON_DEBOUNCE_MS = 50UL;
 /* TEMPI */
 constexpr unsigned long T1_MS        = 10000UL;  // timeout del transito
 constexpr unsigned long GATE_TASK_MS = 50UL;     // periodo del gatetask
+constexpr unsigned long PARKING_TASK_MS = 200UL;   // display/LED: human perception
+constexpr unsigned long ALARM_TASK_MS   = 500UL;   // buzzer on/off rhythm
 
 /* DISPLAY */
 constexpr uint8_t LCD_I2C_ADDRESS = 0x27;        // da verificare una volta comprato l'I2C

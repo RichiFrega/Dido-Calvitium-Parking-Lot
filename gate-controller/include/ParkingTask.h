@@ -30,6 +30,7 @@ private:
 
     int shownFreeSpots; // last number shown to the user
     bool shownAlarm;    // last alarm state shown
+    bool shownOffline;  // last offline state shown
 
     State computeState();
     void setState(State s);
