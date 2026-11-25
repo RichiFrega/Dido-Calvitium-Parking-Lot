@@ -25,7 +25,7 @@ private:
 
 /* true = sensor driven by the keyboard, false = real sonar */
 constexpr bool FAKE_A = false;
-constexpr bool FAKE_B = true;
+constexpr bool FAKE_B = false;
 
 Scheduler sched;
 ParkingContext* context;

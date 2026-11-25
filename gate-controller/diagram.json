@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "author": "Gate Controller - Smart Parking",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-arduino-uno", "id": "uno", "top": 200, "left": 0, "attrs": {} },
+
+    { "type": "wokwi-hc-sr04", "id": "sonarA", "top": -60, "left": -200, "attrs": { "distance": "100" } },
+    { "type": "wokwi-hc-sr04", "id": "sonarB", "top": -60, "left": 50, "attrs": { "distance": "100" } },
+
+    { "type": "wokwi-servo", "id": "servo", "top": -60, "left": 320, "attrs": {} },
+
+    { "type": "wokwi-pir-motion-sensor", "id": "pir", "top": 450, "left": 420, "attrs": {} },
+
+    { "type": "wokwi-pushbutton", "id": "btn", "top": 480, "left": 0, "attrs": { "color": "blue", "label": "Apertura" } },
+    { "type": "wokwi-resistor", "id": "rBtn", "top": 560, "left": 0, "rotate": 90, "attrs": { "value": "10000" } },
+
+    { "type": "wokwi-buzzer", "id": "buzzer", "top": 450, "left": 200, "attrs": { "volume": "0.2" } },
+
+    { "type": "wokwi-led", "id": "ledG", "top": 100, "left": 420, "attrs": { "color": "green" } },
+    { "type": "wokwi-led", "id": "ledR", "top": 100, "left": 480, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "rG", "top": 180, "left": 410, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "rR", "top": 180, "left": 470, "rotate": 90, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "sonarA:VCC", "uno:5V", "red", [] ],
+    [ "sonarA:GND", "uno:GND.1", "black", [] ],
+    [ "sonarA:TRIG", "uno:4", "orange", [] ],
+    [ "sonarA:ECHO", "uno:5", "yellow", [] ],
+
+    [ "sonarB:VCC", "uno:5V", "red", [] ],
+    [ "sonarB:GND", "uno:GND.1", "black", [] ],
+    [ "sonarB:TRIG", "uno:6", "orange", [] ],
+    [ "sonarB:ECHO", "uno:7", "yellow", [] ],
+
+    [ "servo:V+", "uno:5V", "red", [] ],
+    [ "servo:GND", "uno:GND.1", "black", [] ],
+    [ "servo:PWM", "uno:9", "orange", [] ],
+
+    [ "pir:VCC", "uno:5V", "red", [] ],
+    [ "pir:GND", "uno:GND.2", "black", [] ],
+    [ "pir:OUT", "uno:3", "green", [] ],
+
+    [ "btn:1.l", "uno:5V", "red", [] ],
+    [ "btn:2.l", "uno:2", "blue", [] ],
+    [ "rBtn:1", "uno:2", "blue", [] ],
+    [ "rBtn:2", "uno:GND.2", "black", [] ],
+
+    [ "buzzer:2", "uno:10", "purple", [] ],
+    [ "buzzer:1", "uno:GND.3", "black", [] ],
+
+    [ "uno:11", "rG:1", "green", [] ],
+    [ "rG:2", "ledG:A", "green", [] ],
+    [ "ledG:C", "uno:GND.3", "black", [] ],
+
+    [ "uno:12", "rR:1", "red", [] ],
+    [ "rR:2", "ledR:A", "red", [] ],
+    [ "ledR:C", "uno:GND.3", "black", [] ]
+  ],
+  "dependencies": {}
+}
