@@ -1,8 +1,8 @@
 #ifndef __BUTTON_EVENT__
 #define __BUTTON_EVENT__
 
-void buttonEventiInit(int pin);
+void buttonEventInit(int pin);
 
-bool buttonEventtake();
+bool buttonEventTake();
 
 #endif

@@ -11,7 +11,8 @@ enum GateEvent
     EV_EXIT,
     EV_ABORT,
     EV_GATE_OPEN,
-    EV_GATE_CLOSED
+    EV_GATE_CLOSED,
+    EV_BUTTON_OPEN
 }; // events produced by the gatetask, to be sent to the cu
 
 // state shared among tasks (shared variables, module 2.3)
@@ -50,6 +51,16 @@ public:
     void requestOpen();
     bool takeOpenRequest();
 
+    void registerButtonOpen();
+
+    // degraded mode
+    bool isOffline();
+    void setOffline(bool offline);
+    int getOfflineEntries();
+    int getOfflineExits();
+
+
+
 private:
     void pushEvent(GateEvent e);
 
@@ -63,6 +74,11 @@ private:
     uint8_t count;  // number of events in the queue
 
     bool openRequested;
+
+    bool offline;
+    int offlineEntries;
+    int offlineExits;
+
 };
 
 #endif
