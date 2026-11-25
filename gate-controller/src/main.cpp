@@ -40,6 +40,8 @@ const __FlashStringHelper* eventName(GateEvent e) {
     case EV_GATE_OPEN:   return F("GATE:OPEN");
     case EV_GATE_CLOSED: return F("GATE:CLOSED");
     case EV_BUTTON_OPEN: return F("BTN:OPEN");
+    case EV_SLEEP:       return F("SLEEP");
+    case EV_WAKE:        return F("WAKE");
     default:             return F("NONE");
   }
 }

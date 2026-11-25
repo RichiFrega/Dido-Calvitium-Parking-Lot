@@ -77,13 +77,16 @@ void GateTask::sleepNow()
     Serial.println(F("# going to sleep"));
     Serial.flush();
     barrier->off();
+    EIFR = bit(INTF1); // clear any old INT1 edge, or we wake up immediately
     attachInterrupt(digitalPinToInterrupt(PIN_PIR), wakeUp, RISING);
 
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-    sleep_enable();
-    sleep_mode();
-
-    sleep_disable();
+    do
+    {
+        sleep_enable();
+        sleep_mode();    // the CPU stops here
+        sleep_disable(); // ...and continues here
+    } while (digitalRead(PIN_PIR) == LOW && digitalRead(PIN_BUTTON) == LOW); // spurious wake-up: sleep again
 
     detachInterrupt(digitalPinToInterrupt(PIN_PIR));
     barrier->on();
