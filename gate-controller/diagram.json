@@ -20,7 +20,9 @@
     { "type": "wokwi-led", "id": "ledG", "top": 100, "left": 420, "attrs": { "color": "green" } },
     { "type": "wokwi-led", "id": "ledR", "top": 100, "left": 480, "attrs": { "color": "red" } },
     { "type": "wokwi-resistor", "id": "rG", "top": 180, "left": 410, "rotate": 90, "attrs": { "value": "220" } },
-    { "type": "wokwi-resistor", "id": "rR", "top": 180, "left": 470, "rotate": 90, "attrs": { "value": "220" } }
+    { "type": "wokwi-resistor", "id": "rR", "top": 180, "left": 470, "rotate": 90, "attrs": { "value": "220" } },
+
+    { "type": "wokwi-lcd1602", "id": "lcd", "top": 300, "left": 420, "attrs": { "pins": "i2c" } }
   ],
   "connections": [
     [ "sonarA:VCC", "uno:5V", "red", [] ],
@@ -55,7 +57,12 @@
 
     [ "uno:12", "rR:1", "red", [] ],
     [ "rR:2", "ledR:A", "red", [] ],
-    [ "ledR:C", "uno:GND.3", "black", [] ]
+    [ "ledR:C", "uno:GND.3", "black", [] ],
+
+    [ "lcd:GND", "uno:GND.2", "black", [] ],
+    [ "lcd:VCC", "uno:5V", "red", [] ],
+    [ "lcd:SDA", "uno:A4", "green", [] ],
+    [ "lcd:SCL", "uno:A5", "blue", [] ]
   ],
   "dependencies": {}
 }

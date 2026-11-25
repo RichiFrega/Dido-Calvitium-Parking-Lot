@@ -10,6 +10,7 @@
 #include "GateTask.h"
 #include "ParkingTask.h"
 #include "AlarmTask.h"
+#include "LcdDisplay.h"
 
 // SOLO PER TEST!!!
 
@@ -113,7 +114,9 @@ void setup() {
   gateTask->init(GATE_TASK_MS);
   sched.addTask(gateTask);
 
-  Task* parkingTask = new ParkingTask(greenLed, redLed, context);
+  Display* display = new LcdDisplay(LCD_I2C_ADDRESS, LCD_COLUMNS, LCD_ROWS);
+
+  Task* parkingTask = new ParkingTask(greenLed, redLed, context, display);
   parkingTask->init(PARKING_TASK_MS);
   sched.addTask(parkingTask);
 

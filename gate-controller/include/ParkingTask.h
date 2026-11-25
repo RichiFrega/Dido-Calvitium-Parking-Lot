@@ -4,6 +4,7 @@
 #include "Task.h"
 #include "Light.h"
 #include "ParkingContext.h"
+#include "Display.h"
 
 /*
  * Parking lot state (AVAILABLE / FULL / CLOSED:
@@ -12,7 +13,7 @@
 class ParkingTask : public Task
 {
 public:
-    ParkingTask(Light *greenLed, Light *redLed, ParkingContext *context);
+    ParkingTask(Light *greenLed, Light *redLed, ParkingContext *context, Display* display);
     void init(int period);
     void tick();
 
@@ -27,6 +28,7 @@ private:
     Light *greenLed;
     Light *redLed;
     ParkingContext *context;
+    Display* display;
 
     int shownFreeSpots; // last number shown to the user
     bool shownAlarm;    // last alarm state shown

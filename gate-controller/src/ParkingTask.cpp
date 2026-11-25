@@ -1,16 +1,18 @@
 #include "ParkingTask.h"
 #include <Arduino.h>
 
-ParkingTask::ParkingTask(Light *greenLed, Light *redLed, ParkingContext *context)
+ParkingTask::ParkingTask(Light *greenLed, Light *redLed, ParkingContext *context, Display *display)
 {
     this->greenLed = greenLed;
     this->redLed = redLed;
     this->context = context;
+    this->display = display;
 }
 
 void ParkingTask::init(int period)
 {
     Task::init(period);
+    display->init();
     shownFreeSpots = context->getFreeSpots();
     shownAlarm = context->isAlarmOn();
     shownOffline = context->isOffline();
@@ -59,24 +61,23 @@ void ParkingTask::showMessage()
 
     if (shownAlarm)
     {
-        Serial.println(F("# LCD: EVACUARE"));
+        display->showText(F("EVACUARE"));
     }
     else if (shownOffline)
     {
-        Serial.println(F("# LCD: OFFLINE"));
+        display->showText(F("OFFLINE"));
     }
     else if (state == CLOSED)
     {
-        Serial.println(F("# LCD: PARCHEGGIO CHIUSO"));
+        display->showText(F("CHIUSO"));
     }
     else if (state == FULL)
     {
-        Serial.println(F("# LCD: PARCHEGGIO PIENO"));
+        display->showText(F("PARCHEGGIO PIENO"));
     }
     else
     {
-        Serial.print(F("# LCD: Posti liberi: "));
-        Serial.println(shownFreeSpots);
+        display->showFreeSpots(shownFreeSpots);
     }
 }
 
@@ -87,9 +88,7 @@ void ParkingTask::tick()
     {
         setState(next); // transition
     }
-    else if (context->getFreeSpots() != shownFreeSpots
-            || context->isAlarmOn() != shownAlarm
-            || context->isOffline() != shownOffline)
+    else if (context->getFreeSpots() != shownFreeSpots || context->isAlarmOn() != shownAlarm || context->isOffline() != shownOffline)
     {
         showMessage(); // self-loop: refresh only
     }
